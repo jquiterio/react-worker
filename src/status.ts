@@ -1,0 +1,10 @@
+export enum WORKER_STATUS {
+    PENDING = 'PENDING',
+    SUCCESS = 'SUCCESS',
+    RUNNING = 'RUNNING',
+    ERROR = 'ERROR',
+    TIMEDOUT = 'TIMEDOUT',
+    KILLED = 'KILLED',
+}
+
+export default WORKER_STATUS
