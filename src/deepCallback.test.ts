@@ -1,42 +1,38 @@
-import { renderHook } from '@testing-library/react-hooks';
-import { describe, it, expect } from 'vitest';
-import { useDeepCallback } from './deepCallback';
-import { DependencyList } from 'react';
+import { describe, it, expect, vi } from 'bun:test'
+import { renderHook } from '@testing-library/react-hooks'
+import { useDeepCallback } from './deepCallback'
 
 describe('useDeepCallback', () => {
-    it('should return the same callback if dependencies have not changed', () => {
-        const callback = jest.fn();
-        const dependencies: DependencyList = [1, 2, 3];
+    it('should keep the same callback when dependencies do not change', () => {
+        const callback = vi.fn()
+        const { result, rerender } = renderHook(
+            ({ cb, deps }) => useDeepCallback(cb, deps),
+            { initialProps: { cb: callback, deps: [1, 2] } }
+        )
+        const firstCallback = result.current
+        rerender({ cb: callback, deps: [1, 2] })
+        const secondCallback = result.current
 
-        const { result, rerender } = renderHook(() => useDeepCallback(callback, dependencies));
+        expect(firstCallback).toBe(secondCallback)
+    })
 
-        const firstCallback = result.current;
-        rerender();
+    it('should provide a new callback when dependencies change', () => {
+        const callback = vi.fn()
+        const { result, rerender } = renderHook(
+            ({ cb, deps }) => useDeepCallback(cb, deps),
+            { initialProps: { cb: callback, deps: [1, 2] } }
+        )
+        const firstCallback = result.current
+        rerender({ cb: callback, deps: [1, 3] })
+        const secondCallback = result.current
 
-        expect(result.current).toBe(firstCallback);
-    });
+        expect(firstCallback).not.toBe(secondCallback)
+    })
 
-    it('should return a new callback if dependencies have changed', () => {
-        const callback = jest.fn();
-        const dependencies: DependencyList = [1, 2, 3];
-
-        const { result, rerender } = renderHook(({ deps }) => useDeepCallback(callback, deps), {
-            initialProps: { deps: dependencies }
-        });
-
-        const firstCallback = result.current;
-        rerender({ deps: [4, 5, 6] });
-
-        expect(result.current).not.toBe(firstCallback);
-    });
-
-    it('should call the callback with the correct arguments', () => {
-        const callback = jest.fn((a, b) => a + b);
-        const dependencies: DependencyList = [1, 2];
-
-        const { result } = renderHook(() => useDeepCallback(callback, dependencies));
-
-        result.current(3, 4);
-        expect(callback).toHaveBeenCalledWith(3, 4);
-    });
-});
+    it('should call the callback function correctly', () => {
+        const callback = vi.fn()
+        const { result } = renderHook(() => useDeepCallback(callback, []))
+        result.current('test-arg')
+        expect(callback).toHaveBeenCalledWith('test-arg')
+    })
+})
